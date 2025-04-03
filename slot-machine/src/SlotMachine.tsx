@@ -97,7 +97,8 @@ export default function SlotMachine() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [spinning]);
+  });
+
   return (
     <div className="flex flex-col justify-center items-center">
       {showConfetti && (

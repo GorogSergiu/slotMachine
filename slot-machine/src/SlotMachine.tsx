@@ -10,16 +10,16 @@ type Prize = {
 };
 
 const prizes: Prize[] = [
-  { name: 'tricou', winPercentage: 15, stock: 20 },
-  { name: 'sapca', winPercentage: 20, stock: 10 },
-  { name: 'insigna', winPercentage: 10, stock: 0 },
-  { name: 'geanta', winPercentage: 5, stock: 5 },
-  { name: 'hanorac', winPercentage: 10, stock: 8 },
-  { name: 'breloc', winPercentage: 10, stock: 15 },
-  { name: 'stickere', winPercentage: 5, stock: 50 },
-  { name: 'pahar', winPercentage: 5, stock: 12 },
-  { name: 'portofel', winPercentage: 10, stock: 7 },
-  { name: 'rucsac', winPercentage: 10, stock: 3 },
+  { name: 'tricou', winPercentage: 15, stock: 200 },
+  { name: 'sapca', winPercentage: 20, stock: 100 },
+  { name: 'insigna', winPercentage: 10, stock: 200 },
+  { name: 'geanta', winPercentage: 5, stock: 500 },
+  { name: 'hanorac', winPercentage: 10, stock: 800 },
+  { name: 'breloc', winPercentage: 10, stock: 1500 },
+  { name: 'stickere', winPercentage: 5, stock: 2000 },
+  { name: 'pahar', winPercentage: 5, stock: 1200 },
+  { name: 'portofel', winPercentage: 10, stock: 700 },
+  { name: 'rucsac', winPercentage: 10, stock: 300 },
 ];
 
 function getWeightedPrize(): Prize {
@@ -43,7 +43,7 @@ export default function SlotMachine() {
   const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const itemHeight = 80;
+  const itemHeight = 120;
   const visibleIndex = 1;
 
   const handleSpin = async () => {
@@ -89,7 +89,7 @@ export default function SlotMachine() {
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.code === 'Space' && !spinning) {
+      if (event.code === 'Enter' && !spinning) {
         event.preventDefault();
         handleSpin();
       }
@@ -114,15 +114,15 @@ export default function SlotMachine() {
         <img src="/logo.png" alt="logo" className="w-100" />
       </div>
 
-      <div className="w-[500px] mx-auto mt-10 md:mt-16">
-        <div className="overflow-hidden h-[240px] relative border-4 border-orange-600 rounded-lg bg-white">
-          <div className="absolute top-1/2 left-0 w-full h-[80px] -translate-y-1/2 border-y-2 border-dashed border-orange-400 pointer-events-none z-10" />
+      <div className="w-[800px] mx-auto mt-10 md:mt-16">
+        <div className="overflow-hidden h-[360px] relative border-4 border-orange-600 rounded-lg bg-white">
+          <div className="absolute top-1/2 left-0 w-full h-[120px] -translate-y-1/2 border-y-2 border-dashed border-orange-400 pointer-events-none z-10" />
 
           <motion.div animate={controls} ref={containerRef}>
             {spinningList.map((prize, index) => (
               <div
                 key={index}
-                className={`h-[80px] flex items-center justify-center text-[32px] font-bold ${
+                className={`h-[120px] flex items-center justify-center text-[48px] font-bold ${
                   prize.stock === 0 ? 'text-gray-400 line-through' : ''
                 }`}
               >
@@ -135,13 +135,15 @@ export default function SlotMachine() {
         <button
           onClick={handleSpin}
           disabled={spinning}
-          className="mt-6 w-full text-[20px] pt-7 pb-7 btn btn-neutral"
+          className="mt-6 w-full text-[20px] pt-9 pb-9 btn btn-neutral"
         >
           {spinning ? (
             'Se învârte...'
           ) : (
             <>
-              Apasă <RocketLaunchIcon className="h-6 w-6 inline" />
+              <p className="text-[30px]">
+                Apasă tasta ENTER <RocketLaunchIcon className="h-6 w-6 inline" />
+              </p>
             </>
           )}
         </button>

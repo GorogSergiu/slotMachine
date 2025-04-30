@@ -159,7 +159,7 @@ export default function SlotMachine() {
             ) : (
               <>
                 <p className="text-[30px]">
-                  Apasă tasta ENTER <RocketLaunchIcon className="h-6 w-6 inline" />
+                  Apasă butonul roșu <RocketLaunchIcon className="h-8 w-8 inline" />
                 </p>
               </>
             )}

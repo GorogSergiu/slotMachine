@@ -42,6 +42,7 @@ export default function SlotMachine() {
   const [showConfetti, setShowConfetti] = useState(false);
   const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const itemHeight = 120;
   const visibleIndex = 1;
@@ -79,80 +80,102 @@ export default function SlotMachine() {
     }
 
     setSpinning(false);
+    setModalOpen(true);
     setShowConfetti(true);
 
-    // Hide confetti after 5 seconds
-    setTimeout(() => setShowConfetti(false), 5000);
+    setTimeout(() => setShowConfetti(false), 8000);
   };
 
   const spinningList = Array(20).fill(prizes).flat();
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.code === 'Enter' && !spinning) {
+      if (event.code === 'Enter') {
         event.preventDefault();
-        handleSpin();
+        if (modalOpen) {
+          setModalOpen(false); // just close modal
+          window.location.reload();
+        } else if (!spinning) {
+          handleSpin(); // spin only when modal is not open
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  });
+  }, [modalOpen, spinning]);
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      {showConfetti && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={false}
-          numberOfPieces={200}
-        />
-      )}
-
-      <div>
-        <img src="/logo.png" alt="logo" className="w-100" />
+    <div className="flex flex-row justify-center items-center">
+      <div className="mb-8 text-center w-1/3">
+        <h2 className="text-[34px] font-bold mb-4">Premii disponibile:</h2>
+        <div className="flex flex-col gap-4 text-[24px]">
+          {prizes.map((prize, index) => (
+            <div key={index} className={`${prize.stock === 0 ? 'text-gray-400 line-through' : ''}`}>
+              {prize.name}
+            </div>
+          ))}
+        </div>
       </div>
+      <div className="flex flex-col justify-center items-center w-2/3">
+        {showConfetti && (
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={200}
+          />
+        )}
 
-      <div className="w-[800px] mx-auto mt-10 md:mt-16">
-        <div className="overflow-hidden h-[360px] relative border-4 border-orange-600 rounded-lg bg-white">
-          <div className="absolute top-1/2 left-0 w-full h-[120px] -translate-y-1/2 border-y-2 border-dashed border-orange-400 pointer-events-none z-10" />
-
-          <motion.div animate={controls} ref={containerRef}>
-            {spinningList.map((prize, index) => (
-              <div
-                key={index}
-                className={`h-[120px] flex items-center justify-center text-[48px] font-bold ${
-                  prize.stock === 0 ? 'text-gray-400 line-through' : ''
-                }`}
-              >
-                {prize.name}
-              </div>
-            ))}
-          </motion.div>
+        <div>
+          <img src="/logo.png" alt="logo" className="w-100" />
         </div>
 
-        <button
-          onClick={handleSpin}
-          disabled={spinning}
-          className="mt-6 w-full text-[20px] pt-9 pb-9 btn btn-neutral"
-        >
-          {spinning ? (
-            'Se învârte...'
-          ) : (
-            <>
-              <p className="text-[30px]">
-                Apasă tasta ENTER <RocketLaunchIcon className="h-6 w-6 inline" />
-              </p>
-            </>
-          )}
-        </button>
+        <div className="w-[800px] mx-auto">
+          <div className="overflow-hidden h-[360px] relative border-4 border-orange-600 rounded-lg bg-white">
+            <div className="absolute top-1/2 left-0 w-full h-[120px] -translate-y-1/2 border-y-2 border-dashed border-orange-400 pointer-events-none z-10" />
 
-        {currentPrize && !spinning && (
-          <div className="mt-6 text-center text-[42px] font-semibold text-orange-600">
-            🎉 Ai câștigat: <strong>{currentPrize.name}</strong>
+            <motion.div animate={controls} ref={containerRef}>
+              {spinningList.map((prize, index) => (
+                <div
+                  key={index}
+                  className={`h-[120px] flex items-center justify-center text-[48px] font-bold ${
+                    prize.stock === 0 ? 'text-gray-400 line-through' : ''
+                  }`}
+                >
+                  {prize.name}
+                </div>
+              ))}
+            </motion.div>
           </div>
-        )}
+
+          <button
+            onClick={handleSpin}
+            disabled={spinning}
+            className="mt-6 w-full text-[20px] pt-9 pb-9 btn btn-neutral"
+          >
+            {spinning ? (
+              'Se învârte...'
+            ) : (
+              <>
+                <p className="text-[30px]">
+                  Apasă tasta ENTER <RocketLaunchIcon className="h-6 w-6 inline" />
+                </p>
+              </>
+            )}
+          </button>
+
+          {modalOpen && currentPrize && !spinning && (
+            <dialog id="my_modal_4" className="modal modal-open">
+              <div className="modal-box w-11/12 max-w-5xl flex-col flex justify-center items-center">
+                <h3 className="font-bold text-[84px] mb-4 text-orange-600">Felicitări! 🎉</h3>
+                <p className="py-4 text-[60px]">
+                  Ai câștigat: <strong>{currentPrize.name}</strong>!
+                </p>
+              </div>
+            </dialog>
+          )}
+        </div>
       </div>
     </div>
   );

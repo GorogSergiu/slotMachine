@@ -173,28 +173,32 @@ export default function SlotMachine() {
           <button
             onClick={handleSpin}
             disabled={spinning}
-            className="mt-6 w-full text-[20px] pt-9 pb-9 btn btn-neutral"
+            className="mt-6 w-full text-[20px] pt-5 pb-5 bg-black text-white rounded-lg"
           >
             {spinning ? (
               'Se învârte...'
             ) : (
               <>
                 <p className="text-[30px]">
-                  Apasă tasta ENTER sau click <RocketLaunchIcon className="h-8 w-8 inline" />
+                  Apasă butonul roșu <RocketLaunchIcon className="h-8 w-8 inline" />
                 </p>
               </>
             )}
           </button>
 
+          {/* Custom Modal instead of daisyUI dialog */}
           {modalOpen && currentPrize && !spinning && (
-            <dialog id="my_modal_4" className="modal modal-open">
-              <div className="modal-box w-11/12 max-w-5xl flex-col flex justify-center items-center">
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,0.2)' }}
+            >
+              <div className="bg-white rounded-lg shadow-lg p-12 flex flex-col items-center w-[900px]">
                 <h3 className="font-bold text-[84px] mb-4 text-orange-600">Felicitări! 🎉</h3>
                 <p className="py-4 text-[60px]">
                   Ai câștigat: <strong>{currentPrize.name}</strong>!
                 </p>
               </div>
-            </dialog>
+            </div>
           )}
         </div>
       </div>

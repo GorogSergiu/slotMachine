@@ -153,8 +153,8 @@ export default function SlotMachine() {
         </div>
 
         <div className="w-[800px] mx-auto">
-          <div className="overflow-hidden h-[360px] relative border-4 border-orange-600 rounded-lg bg-white">
-            <div className="absolute top-1/2 left-0 w-full h-[120px] -translate-y-1/2 border-y-2 border-dashed border-orange-400 pointer-events-none z-10" />
+          <div className="overflow-hidden h-[360px] relative border-4 border-[#FF5F1F] rounded-lg bg-white">
+            <div className="absolute top-1/2 left-0 w-full h-[120px] -translate-y-1/2 border-y-2 border-dashed border-[#FFA500] pointer-events-none z-10" />
 
             <motion.div animate={controls} ref={containerRef}>
               {spinningList.map((prize, index) => (
@@ -193,7 +193,7 @@ export default function SlotMachine() {
               style={{ background: 'rgba(0,0,0,0.2)' }}
             >
               <div className="bg-white rounded-lg shadow-lg p-12 flex flex-col items-center w-[900px]">
-                <h3 className="font-bold text-[84px] mb-4 text-orange-600">Felicitări! 🎉</h3>
+                <h3 className="font-bold text-[84px] mb-4 text-[#FF5F1F]">Felicitări! 🎉</h3>
                 <p className="py-4 text-[60px]">
                   Ai câștigat: <strong>{currentPrize.name}</strong>!
                 </p>

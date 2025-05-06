@@ -1,6 +1,6 @@
 import { Prize } from './types';
 
-const API_URL = 'http://localhost:5010/api';
+const API_URL = import.meta.env.VITE_API_URL + '/api';
 
 export const fetchPrizes = async (): Promise<Prize[]> => {
   try {

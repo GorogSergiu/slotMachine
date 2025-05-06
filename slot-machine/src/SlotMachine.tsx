@@ -1,7 +1,8 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { RocketLaunchIcon } from '@heroicons/react/24/solid';
 import Confetti from 'react-confetti';
+import { fetchPrizes, decrementPrizeStock } from './slotApi';
 
 type Prize = {
   name: string;
@@ -9,34 +10,8 @@ type Prize = {
   stock: number;
 };
 
-const prizes: Prize[] = [
-  { name: 'tricou', winPercentage: 15, stock: 200 },
-  { name: 'sapca', winPercentage: 20, stock: 100 },
-  { name: 'insigna', winPercentage: 10, stock: 200 },
-  { name: 'geanta', winPercentage: 5, stock: 500 },
-  { name: 'hanorac', winPercentage: 10, stock: 800 },
-  { name: 'breloc', winPercentage: 10, stock: 1500 },
-  { name: 'stickere', winPercentage: 5, stock: 2000 },
-  { name: 'pahar', winPercentage: 5, stock: 1200 },
-  { name: 'portofel', winPercentage: 10, stock: 700 },
-  { name: 'rucsac', winPercentage: 10, stock: 300 },
-];
-
-function getWeightedPrize(): Prize {
-  const available = prizes.filter((p) => p.stock > 0);
-  const total = available.reduce((acc, prize) => acc + prize.winPercentage, 0);
-  const rand = Math.random() * total;
-
-  let cumulative = 0;
-  for (const prize of available) {
-    cumulative += prize.winPercentage;
-    if (rand <= cumulative) return prize;
-  }
-
-  return available[available.length - 1];
-}
-
 export default function SlotMachine() {
+  const [prizes, setPrizes] = useState<Prize[]>([]);
   const [currentPrize, setCurrentPrize] = useState<Prize | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -47,13 +22,52 @@ export default function SlotMachine() {
   const itemHeight = 120;
   const visibleIndex = 1;
 
-  const handleSpin = async () => {
-    if (spinning) return;
+  useEffect(() => {
+    const getPrizes = async () => {
+      try {
+        const fetchedPrizes = await fetchPrizes();
+        setPrizes(fetchedPrizes);
+      } catch (error) {
+        console.error('Error fetching prizes:', error);
+      }
+    };
+    getPrizes();
+  }, []);
+
+  const handleSpin = useCallback(async () => {
+    if (spinning || prizes.length === 0) return;
     setSpinning(true);
     setShowConfetti(false);
 
+    function getWeightedPrize(): Prize | null {
+      const available = prizes.filter((p) => p.stock > 0);
+      if (available.length === 0) return null;
+      const total = available.reduce((acc, prize) => acc + prize.winPercentage, 0);
+      const rand = Math.random() * total;
+      let cumulative = 0;
+      for (const prize of available) {
+        cumulative += prize.winPercentage;
+        if (rand <= cumulative) return prize;
+      }
+      return available[available.length - 1];
+    }
+
     const winner = getWeightedPrize();
+    if (!winner) {
+      setSpinning(false);
+      return;
+    }
     setCurrentPrize(winner);
+
+    // Decrement stock in backend
+    try {
+      await decrementPrizeStock(winner.name);
+      // Optionally, refresh local prizes state
+      const updatedPrizes = await fetchPrizes();
+      setPrizes(updatedPrizes);
+    } catch (error) {
+      console.error('Failed to decrement prize stock:', error);
+    }
 
     const baseList = Array(20).fill(prizes).flat();
     const winnerIndexes = baseList
@@ -63,6 +77,10 @@ export default function SlotMachine() {
     const validIndexes = winnerIndexes.filter(
       ({ index }) => index > visibleIndex && index < baseList.length - visibleIndex
     );
+    if (validIndexes.length === 0) {
+      setSpinning(false);
+      return;
+    }
     const { index: targetIndex } = validIndexes[Math.floor(Math.random() * validIndexes.length)];
     const distance = (targetIndex - visibleIndex) * itemHeight;
 
@@ -74,36 +92,39 @@ export default function SlotMachine() {
       },
     });
 
-    const prizeIndex = prizes.findIndex((p) => p.name === winner.name);
-    if (prizes[prizeIndex].stock > 0) {
-      prizes[prizeIndex].stock -= 1;
-    }
-
     setSpinning(false);
     setModalOpen(true);
     setShowConfetti(true);
 
     setTimeout(() => setShowConfetti(false), 8000);
-  };
+  }, [spinning, prizes, controls]);
 
   const spinningList = Array(20).fill(prizes).flat();
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.code === 'Enter') {
+        console.log('Enter pressed');
         event.preventDefault();
         if (modalOpen) {
-          setModalOpen(false); // just close modal
+          setModalOpen(false);
           window.location.reload();
         } else if (!spinning) {
-          handleSpin(); // spin only when modal is not open
+          handleSpin();
         }
       }
     };
-
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [modalOpen, spinning]);
+  }, [modalOpen, spinning, handleSpin]);
+
+  if (prizes.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-screen text-3xl font-bold">
+        Loading prizes...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-row justify-center items-center">
@@ -159,7 +180,7 @@ export default function SlotMachine() {
             ) : (
               <>
                 <p className="text-[30px]">
-                  Apasă butonul roșu <RocketLaunchIcon className="h-8 w-8 inline" />
+                  Apasă tasta ENTER sau click <RocketLaunchIcon className="h-8 w-8 inline" />
                 </p>
               </>
             )}

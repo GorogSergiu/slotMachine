@@ -3,6 +3,8 @@ import { motion, useAnimation } from 'framer-motion';
 import { RocketLaunchIcon } from '@heroicons/react/24/solid';
 import Confetti from 'react-confetti';
 import { fetchPrizes, decrementPrizeStock } from './slotApi';
+import slotSound from '../assets/slotSound.mp3';
+import winSound from '../assets/winSound.mp3';
 
 type Prize = {
   name: string;
@@ -18,6 +20,28 @@ export default function SlotMachine() {
   const controls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const audioRef = useRef(new Audio(slotSound));
+  const winAudioRef = useRef(new Audio(winSound));
+
+  const playWinSound = () => {
+    winAudioRef.current.currentTime = 0;
+    winAudioRef.current.play();
+  };
+
+  const stopWinSound = () => {
+    winAudioRef.current.pause();
+    winAudioRef.current.currentTime = 0;
+  };
+
+  const playSound = () => {
+    audioRef.current.currentTime = 0;
+    audioRef.current.play();
+  };
+
+  const stopSound = () => {
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+  };
 
   const itemHeight = 120;
   const visibleIndex = 1;
@@ -38,6 +62,7 @@ export default function SlotMachine() {
     if (spinning || prizes.length === 0) return;
     setSpinning(true);
     setShowConfetti(false);
+    playSound();
 
     function getWeightedPrize(): Prize | null {
       const available = prizes.filter((p) => p.stock > 0);
@@ -92,6 +117,8 @@ export default function SlotMachine() {
       },
     });
 
+    stopSound();
+
     setSpinning(false);
     setModalOpen(true);
     setShowConfetti(true);
@@ -118,6 +145,15 @@ export default function SlotMachine() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [modalOpen, spinning, handleSpin]);
 
+  // Play win sound when modal opens, stop when closes
+  useEffect(() => {
+    if (modalOpen) {
+      playWinSound();
+    } else {
+      stopWinSound();
+    }
+  }, [modalOpen]);
+
   if (prizes.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen text-3xl font-bold">
@@ -129,14 +165,14 @@ export default function SlotMachine() {
   return (
     <div className="flex flex-row justify-center items-center">
       <div className="mb-8 text-center w-1/3">
-        <h2 className="text-[34px] font-bold mb-4">Premii disponibile:</h2>
+        {/* <h2 className="text-[34px] font-bold mb-4">Premii disponibile:</h2>
         <div className="flex flex-col gap-4 text-[24px]">
           {prizes.map((prize, index) => (
             <div key={index} className={`${prize.stock === 0 ? 'text-gray-400 line-through' : ''}`}>
               {prize.name}
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
       <div className="flex flex-col justify-center items-center w-2/3">
         {showConfetti && (
@@ -173,14 +209,14 @@ export default function SlotMachine() {
           <button
             onClick={handleSpin}
             disabled={spinning}
-            className="mt-6 w-full text-[20px] pt-5 pb-5 bg-black text-white rounded-lg"
+            className="mt-6 w-full text-[20px] pt-5 pb-5 bg-[#950110] text-white rounded-lg"
           >
             {spinning ? (
               'Se învârte...'
             ) : (
               <>
-                <p className="text-[30px]">
-                  Apasă butonul roșu <RocketLaunchIcon className="h-8 w-8 inline" />
+                <p className="text-[30px] font-[700]">
+                  APASĂ BUTONUL ROȘU <RocketLaunchIcon className="h-8 w-8 inline" />
                 </p>
               </>
             )}

@@ -2,15 +2,10 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { RocketLaunchIcon } from '@heroicons/react/24/solid';
 import Confetti from 'react-confetti';
-import { fetchPrizes, decrementPrizeStock } from './slotApi';
+import { fetchPrizes, spin } from './slotApi';
+import { Prize } from './types';
 import slotSound from '../assets/slotSound.mp3';
 import winSound from '../assets/winSound.mp3';
-
-type Prize = {
-  name: string;
-  winPercentage: number;
-  stock: number;
-};
 
 export default function SlotMachine() {
   const [prizes, setPrizes] = useState<Prize[]>([]);
@@ -64,34 +59,26 @@ export default function SlotMachine() {
     setShowConfetti(false);
     playSound();
 
-    function getWeightedPrize(): Prize | null {
-      const available = prizes.filter((p) => p.stock > 0);
-      if (available.length === 0) return null;
-      const total = available.reduce((acc, prize) => acc + prize.winPercentage, 0);
-      const rand = Math.random() * total;
-      let cumulative = 0;
-      for (const prize of available) {
-        cumulative += prize.winPercentage;
-        if (rand <= cumulative) return prize;
-      }
-      return available[available.length - 1];
+    // Baza de date alege castigatorul si scade stocul, atomic.
+    let winner: Prize | null = null;
+    try {
+      winner = await spin();
+    } catch (error) {
+      console.error('Failed to spin:', error);
     }
 
-    const winner = getWeightedPrize();
     if (!winner) {
+      stopSound();
       setSpinning(false);
       return;
     }
     setCurrentPrize(winner);
 
-    // Decrement stock in backend
     try {
-      await decrementPrizeStock(winner.name);
-      // Optionally, refresh local prizes state
       const updatedPrizes = await fetchPrizes();
       setPrizes(updatedPrizes);
     } catch (error) {
-      console.error('Failed to decrement prize stock:', error);
+      console.error('Failed to refresh prizes:', error);
     }
 
     const baseList = Array(20).fill(prizes).flat();

@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.7.5",
+    "@supabase/supabase-js": "^2.111.0",
     "@tailwindcss/vite": "^4.0.14",
     "axios": "^1.8.4",
     "framer-motion": "^12.6.3",

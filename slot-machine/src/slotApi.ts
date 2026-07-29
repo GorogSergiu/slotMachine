@@ -1,45 +1,29 @@
+import { supabase } from './supabase';
 import { Prize } from './types';
 
-const API_URL = import.meta.env.VITE_API_URL + '/api';
-
+/** Lista premiilor, pentru afisajul ruletei. */
 export const fetchPrizes = async (): Promise<Prize[]> => {
-  try {
-    const response = await fetch(`${API_URL}/prizes`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch prizes');
-    }
-    return await response.json();
-  } catch (error) {
+  const { data, error } = await supabase.from('prizes').select('name, stock').order('id');
+
+  if (error) {
     console.error('Error fetching prizes:', error);
     throw error;
   }
+  return data ?? [];
 };
 
-export const updatePrizeStock = async (name: string, stock: number): Promise<Prize> => {
-  try {
-    const response = await fetch(`${API_URL}/updatePrizeStock`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, stock }),
-    });
+/**
+ * Alege un premiu ponderat si ii scade stocul, atomic, in baza de date.
+ * `spin()` intoarce un set de 0 sau 1 randuri; gol = nu mai e nimic pe stoc.
+ */
+export const spin = async (): Promise<Prize | null> => {
+  const { data, error } = await supabase.rpc('spin');
 
-    if (!response.ok) {
-      throw new Error('Failed to update prize stock');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error updating prize stock:', error);
+  if (error) {
+    console.error('Error spinning:', error);
     throw error;
   }
-};
 
-// New API: decrement prize stock by 1
-export const decrementPrizeStock = async (name: string): Promise<Prize> => {
-  // Fetch current stock, then update
-  const prizes = await fetchPrizes();
-  const prize = prizes.find((p) => p.name === name);
-  if (!prize || prize.stock <= 0) throw new Error('Prize not found or out of stock');
-  return updatePrizeStock(name, prize.stock - 1);
+  const winner = (data as Prize[] | null)?.[0];
+  return winner ? { name: winner.name, stock: winner.stock } : null;
 };
